@@ -1,52 +1,132 @@
 ## cli-phomemo-printer
 
-a nodejs script that allows you to print images to a phomemo printer.
+> A Node JS package enables printing to a Phomemo printer
 
-Tested with [phomemo M02s](https://phomemo.com/collections/phomemo-m02s). 
+## Overview
 
+The [Phomemo M02 S/Pro](https://eu.phomemo.com/products/m02-pro-portable-printer) is pocket-sized, bluetooth thermal printer that outputs to both paper and transparent labels:
 
+![Phomemo MO2 Pro](https://eu.phomemo.com/cdn/shop/files/Cyan-Phomemo-M02-PRO-Bluetooth-Mini-Printer-High-Quality-Printing-Multiple-Thermal-Stickers_1220x_crop_center.png?v=1729060454)
 
-https://github.com/vrk/cli-phomemo-printer/assets/610200/edcb1904-9748-4fbc-8a5c-6d164e96b8fd
+This package enables you to print directly to the printer using Node JS, from both local files, or via the browser through a local express server.
 
+## Setup
 
+### Bluetooth
 
-### How to install & run
+For the package to connect to to the printer, OSX needs to give permissions to the application running Node JS. This will most likely be your terminal app or your IDE. 
 
-#### Permissions
+Navigate to System Settings > Privacy & Security > Bluetooth, and then add your preferred terminal app (e.g. iTerm) to allow it to connect to Bluetooth.
 
-For MacOS: You must enable Bluetooth permissions for the terminal on which this runs
+> Note that you **should not** connect to the printer in the Bluetooth settings, or else the CLI will be unable to find the printer.  
 
-This is done by going to System Settings -> Privacy & Security -> Bluetooth, and then adding the terminal program (e.g. iTerm) to allow Bluetooth connections.
+### Installation
 
-#### Clone & run
+Next, clone the repository directly from GitHub:
 
-This isn't listed on npm (yet?) so you need to clone and build locally to run, e.g.
+```bash
+git clone git@github.com:davestewart/phomemo-cli.git
+cd phomemo-cli
+npm install
+```
+
+### Running
+
+Once set up, you can run the CLI in `server` or `printer` mode.
+
+Before starting, it will first attempt to connect to the printer (see the [Troubleshooting](#troubleshooting) section if you have issues).
+
+#### Server
+
+Run this command to start the web server on port 4000:
+
+```bash
+npm run serve
+```
+
+You will then be able to `POST` to `http://localhost:4000/print` to print images to the printer.
+
+Pass CLI arguments as query strings, for example:
 
 ```
-$ git clone git@github.com:vrk/cli-phomemo-printer.git
-$ npm install
-$ node index.js
+http://localhost:4000/print?dither=50scale=28
 ```
 
-If you run it without command-line arguments, you'll print out a burger sticker.
+#### Printer
 
-#### cli args
+Run this command to print a file directly using the `-f` param:
+
+```bash
+node src -f path/to/file.jpg
+```
+
+If you run this command without command-line arguments, you'll print out a burger sticker.
+
+#### CLI args
 
 ```
 Options:
-  -f, --file <path>   path for image to print (default: "./burger.png")
-  -s, --scale <size>  percent scale at which the image should print (1-100+) (default: 100)
-  -h, --help          display help for command
+  -f, --file      file path to file to print 
+  -p, --port      port to start print server (default: 4000)
+  -s, --scale     scale (percent) the printed output (1-100+) (default: 100)
+  -d, --dither    dither the printed output (0-100) (default: 50)
+  -h, --help      display help for command
 ```
 
-### IMPORTANT USAGE NOTES
+## Troubleshooting
 
-1. **If you're not using the Phomemo M02S:** You will need to edit `index.js` to change `BYTES_PER_LINE` to match your paper. IDK what's the math for this, I just used guess & check to figure it out lol. 
-2. **If you're using smaller receipt paper:** The Phomemo M02S comes with 3 sizes of paper, 53mm (default), 25mm, 15mm. If you're using anything other than 53mm, you're going to have to scale the image using the `-s` flag, e.g. `-s 50` for 25mm paper.
-3. **Known issue:** I've found that the dithering library I'm using doesn't work well on certain black & white images. I'll swap it out later...
+### Connection
+
+It may take several attempts to find the printer:
+
+```bash
+> phomemo-cli@1.0.0 serve
+> node src -p 4000
+
+Operating as: server
+? Select your bluetooth printer - Scan again
+? Select your bluetooth printer - Scan again
+? Select your bluetooth printer (Use arrow keys)
+❯ M02 Pro
+  - Scan again
+  - Quit
+```
+
+If the printer does not show in the list:
+
+- make sure the printer is turned on
+- make sure you did not connect to the printer using the system dialog
+- don't run two scripts attempting to access the printer at the same time
+
+### Paper size
+
+Various sized [labels](https://www.amazon.co.uk/s?k=phomemo+labels) are available for the Phomemo printer. If you're printing using smaller labels than the default, you'll need to scale the output using the `-s` flag.
+
+| Label Size     | CLI     | Server      |
+|----------------|---------|-------------|
+| 53mm (default) | None    | None        |
+| 25mm           | `-s 47` | `?scale=47` |
+| 15mm           | `-s 28` | `?scale=28` |
+
+### Battery
+
+A flashing light on the printer then loss of power probably means that the printer needs charging.
+
+Note that:
+
+- the printer will only charge from a basic mobile phone charger, or a USB cable attached to a laptop.
+- attaching a more powerful charger (such as a laptop) will cause the printer not to charge.
+- you can use the Phomemo app to monitor the charge level.
+
+### Other printers
+
+If you're not using the Phomemo M02S/Pro, you will need to edit `src/print/index.js` to change `BYTES_PER_LINE` to match your paper.
+
+There is not a technique for this; "guess & check" was originally used to figure it out.
 
 
-### Credits
+
+## Credits
 
 This code was cobbled together by reading the very helpful breadcrumbs left by:
 
