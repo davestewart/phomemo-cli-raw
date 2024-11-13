@@ -4,7 +4,7 @@
 
 ## Overview
 
-The [Phomemo M02 S/Pro](https://eu.phomemo.com/products/m02-pro-portable-printer) is pocket-sized, bluetooth thermal printer that outputs to both paper and transparent labels:
+The [Phomemo M02 S/Pro](https://eu.phomemo.com/products/m02-pro-portable-printer) is pocket-sized, bluetooth thermal label printer:
 
 ![Phomemo MO2 Pro](https://eu.phomemo.com/cdn/shop/files/Cyan-Phomemo-M02-PRO-Bluetooth-Mini-Printer-High-Quality-Printing-Multiple-Thermal-Stickers_1220x_crop_center.png?v=1729060454)
 
@@ -36,7 +36,19 @@ Once set up, you can run the CLI in `server` or `printer` mode.
 
 Before starting, it will first attempt to connect to the printer (see the [Troubleshooting](#troubleshooting) section if you have issues).
 
-#### Server
+The full CLI arguments are:
+
+```
+Options:
+  -f, --file      file path to file to print 
+  -p, --port      port to start print server (default: 4000)
+  -s, --scale     scale (percent) the printed output (1-100+) (default: 100)
+  -d, --dither    dither the printed output (0/1) (default: 0)
+  -h, --help      display help for command
+```
+
+
+#### Server Mode
 
 Run this command to start the web server on port 4000:
 
@@ -49,10 +61,10 @@ You will then be able to `POST` to `http://localhost:4000/print` to print images
 Pass CLI arguments as query strings, for example:
 
 ```
-http://localhost:4000/print?dither=50scale=28
+http://localhost:4000/print?scale=28&dither=1
 ```
 
-#### Printer
+#### Printer Mode
 
 Run this command to print a file directly using the `-f` param:
 
@@ -60,18 +72,21 @@ Run this command to print a file directly using the `-f` param:
 node src -f path/to/file.jpg
 ```
 
-If you run this command without command-line arguments, you'll print out a burger sticker.
+If you run this command without command-line arguments, you'll print out a sample burger sticker.
 
-#### CLI args
+## Image and label sizes
 
-```
-Options:
-  -f, --file      file path to file to print 
-  -p, --port      port to start print server (default: 4000)
-  -s, --scale     scale (percent) the printed output (1-100+) (default: 100)
-  -d, --dither    dither the printed output (0-100) (default: 50)
-  -h, --help      display help for command
-```
+The printer's default label size is 53mm and it expects images to be 560px wide. 
+
+Various sized [labels](https://www.amazon.co.uk/s?k=phomemo+labels) are available, though.
+
+If you're printing using smaller labels than the default, you'll need to scale the output using command line arguments or query parameters:
+
+| Label Size     | Image Width | CLI     | Server      |
+|----------------|-------------|---------|-------------|
+| 53mm (default) | 560px       | None    | None        |
+| 25mm           | 264px       | `-s 47` | `?scale=47` |
+| 15mm           | 158px       | `-s 28` | `?scale=28` |
 
 ## Troubleshooting
 
@@ -98,16 +113,6 @@ If the printer does not show in the list:
 - make sure you did not connect to the printer using the system dialog
 - don't run two scripts attempting to access the printer at the same time
 
-### Paper size
-
-Various sized [labels](https://www.amazon.co.uk/s?k=phomemo+labels) are available for the Phomemo printer. If you're printing using smaller labels than the default, you'll need to scale the output using the `-s` flag.
-
-| Label Size     | CLI     | Server      |
-|----------------|---------|-------------|
-| 53mm (default) | None    | None        |
-| 25mm           | `-s 47` | `?scale=47` |
-| 15mm           | `-s 28` | `?scale=28` |
-
 ### Battery
 
 A flashing light on the printer then loss of power probably means that the printer needs charging.
@@ -122,13 +127,13 @@ Note that:
 
 If you're not using the Phomemo M02S/Pro, you will need to edit `src/print/index.js` to change `BYTES_PER_LINE` to match your paper.
 
-There is not a technique for this; "guess & check" was originally used to figure it out.
-
-
+Note that the original value of 70 was determined "guess & check".
 
 ## Credits
 
-This code was cobbled together by reading the very helpful breadcrumbs left by:
+The [original repo](https://github.com/vrk/cli-phomemo-printer) and printing functionality was created by [Victoria Kirst](https://github.com/vrk) – thanks to the very helpful breadcrumbs left by:
 
 - [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools): lifesaver for having the protocol documented & providing the general algorithm
 - [Phomemo Thermal Printing On MacOS](https://brainbaking.com/post/2023/02/phomemo-thermal-printing-on-macos/): gave me faith that this was even possible!
+
+The additional server functionality, Sharp migration, code refactor and improved docs were added by [Dave Stewart](https://github.com/davestewart).

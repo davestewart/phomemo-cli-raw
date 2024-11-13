@@ -2,8 +2,8 @@ import noble from '@abandonware/noble'
 import { confirm, select } from '@inquirer/prompts'
 import { Spinner } from 'cli-spinner'
 
-export const SCAN_AGAIN_SELECTION = '__scan_again__'
-export const QUIT_SELECTION = '__quit__'
+export const SCAN_AGAIN = 'SCAN_AGAIN'
+export const QUIT = 'QUIT'
 
 export let discoveredDevices = {};
 
@@ -13,11 +13,11 @@ export async function getDeviceCharacteristicMenu () {
     await scanDevices(scanDurationInMs)
     const choice = await selectDevice()
 
-    if (choice === SCAN_AGAIN_SELECTION) {
+    if (choice === SCAN_AGAIN) {
       scanDurationInMs = 10000 // Try a longer duration the second time
       void scanDevices()
     }
-    else if (choice === QUIT_SELECTION) {
+    else if (choice === QUIT) {
       process.exit()
     }
     else {
@@ -73,12 +73,12 @@ async function selectDevice () {
   }
   choices.push({
     name: '- Scan again',
-    value: SCAN_AGAIN_SELECTION,
+    value: SCAN_AGAIN,
   })
 
   choices.push({
     name: '- Quit',
-    value: QUIT_SELECTION,
+    value: QUIT,
   })
 
   const prompt = {

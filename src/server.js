@@ -1,13 +1,24 @@
-import Fs from 'fs'
+import Fs, { existsSync, mkdirSync } from 'fs'
 import Path from 'path'
-import { fileURLToPath } from 'url'
 import express from 'express'
 import multer from 'multer'
+import { parseArgs, print } from './print.js'
 
-export function serve (port = 4000, print = (file, dither) => {}) {
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = Path.dirname(__filename)
+// ---------------------------------------------------------------------------------------------------------------------
+// setup
+// ---------------------------------------------------------------------------------------------------------------------
 
+export const CACHE_DIR = 'res/cache/'
+if (!existsSync(CACHE_DIR)) {
+  mkdirSync(CACHE_DIR)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// server
+// ---------------------------------------------------------------------------------------------------------------------
+
+export function serve (port = 4000, characteristic) {
+  // express
   const app = express()
 
   // set up multer for file uploads
@@ -17,36 +28,31 @@ export function serve (port = 4000, print = (file, dither) => {}) {
   // define the /print endpoint
   app.post('/print', upload.single('image'), (req, res) => {
     if (!req.file) {
-      return res.status(400).send('no file uploaded.')
+      return res.status(400).send('No file uploaded.')
     }
 
-    // query parameters
-    const dither = req.query.dither === '1'
-
     // create a temporary file path
-    const path = Path.join(__dirname, '../res/cache', req.file.originalname)
+    const path = Path.join(CACHE_DIR, req.file.originalname.toLowerCase())
 
     // save the file to the temp directory
     Fs.writeFile(path, req.file.buffer, (err) => {
       if (err) {
-        return res.status(500).send('error saving file')
+        return res.status(500).send('Error saving file')
       }
 
       // report
-      res.send('printing!')
+      res.send('Printing!')
 
       // print
       if (typeof print === 'function') {
-        setTimeout(() => {
-          print(path, dither)
-        }, 500)
+        const { scale, dither } = parseArgs(req.query)
+        print(characteristic, path, scale, dither)
       }
     })
   })
 
-
   // start the server
   app.listen(port, () => {
-    console.log(`server is running at http://localhost:${port}`)
+    console.log(`Server running at http://localhost:${port}`)
   })
 }

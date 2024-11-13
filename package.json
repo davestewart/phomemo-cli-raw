@@ -1,5 +1,5 @@
 {
-  "name": "cli-phomemo-printer",
+  "name": "phomemo-cli",
   "description": "",
   "version": "1.0.0",
   "author": "",
@@ -14,14 +14,12 @@
     "@inquirer/prompts": "^2.2.0",
     "cli-spinner": "^0.2.10",
     "commander": "^11.0.0",
-    "escpos-buffer": "^4.0.5",
     "express": "^4.21.1",
     "floyd-steinberg": "^1.0.6",
-    "jimp": "^0.22.8",
     "multer": "^1.4.5-lts.1",
     "noble": "^1.9.1",
-    "node-thermal-printer": "^4.2.1",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "sharp": "^0.33.5"
   },
   "license": "ISC"
 }
