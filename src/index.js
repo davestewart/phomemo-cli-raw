@@ -2,7 +2,7 @@ import Fs from "fs"
 import { Command } from 'commander'
 import { getDeviceCharacteristicMenu } from './device.js'
 import { serve } from './server.js'
-import { parseArgs, print } from './print.js'
+import { parseSettings, print } from './print.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
 // setup
@@ -14,14 +14,16 @@ program
   .option('-p, --port <port>', 'port to start print server')
   .option('-f, --file <path>', 'path for image to print')
   .option('-s, --scale <size>', 'percent scale at which the image should print (1-100)', '100')
-  .option('-d, --dither <dither>', 'flag to dither the passed image', false)
+  .option('-d, --dither', 'flag to dither the passed image', false)
 
 // options
 const options = program.parse(process.argv).opts()
+const settings = parseSettings(options)
 const { port, file } = options
 
-// mode
-console.log(`Mode: ${port ? 'SERVER' : 'PRINTER'}`)
+// debug
+console.log(`Mode: ${port ? 'Server' : 'Printer'}`)
+console.log('Settings:', settings)
 
 // get device
 export const characteristic = await getDeviceCharacteristicMenu()
@@ -32,7 +34,7 @@ export const characteristic = await getDeviceCharacteristicMenu()
 
 // if we've a port, start a server
 if (port) {
-  serve(port, characteristic)
+  serve(port, characteristic, settings)
 }
 
 // otherwise, print supplied or test image
@@ -47,6 +49,6 @@ else {
   }
 
   // print
-  const { scale, dither } = parseArgs(options)
+  const { scale, dither } = settings
   void print(characteristic, target, scale, dither)
 }

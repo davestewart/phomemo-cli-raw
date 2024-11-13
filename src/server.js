@@ -2,7 +2,7 @@ import Fs, { existsSync, mkdirSync } from 'fs'
 import Path from 'path'
 import express from 'express'
 import multer from 'multer'
-import { parseArgs, print } from './print.js'
+import { parseSettings, print } from './print.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
 // setup
@@ -17,7 +17,7 @@ if (!existsSync(CACHE_DIR)) {
 // server
 // ---------------------------------------------------------------------------------------------------------------------
 
-export function serve (port = 4000, characteristic) {
+export function serve (port = 4000, characteristic, settings = {}) {
   // express
   const app = express()
 
@@ -45,8 +45,8 @@ export function serve (port = 4000, characteristic) {
 
       // print
       if (typeof print === 'function') {
-        const { scale, dither } = parseArgs(req.query)
-        print(characteristic, path, scale, dither)
+        const { scale, dither } = parseSettings(req.query)
+        print(characteristic, path, scale || settings.scale, dither || settings.dither)
       }
     })
   })

@@ -182,16 +182,14 @@ async function prepareData (image) {
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
- * Helper function to Parse CLI or HttpRequest args
+ * Helper function to Parse CLI or HttpRequest settings
  *
  * @param {object}  options
  * @returns {{scale: number | undefined, dither: boolean | undefined}}
  */
-export function parseArgs ({ scale, dither } = {}) {
+export function parseSettings ({ scale, dither } = {}) {
   return {
     scale: Number(scale) || undefined,
-    dither: dither === '1' || dither === 'true'
-      ? true
-      : undefined,
+    dither: dither === '1' || dither === 'true' || dither === true
   }
 }
