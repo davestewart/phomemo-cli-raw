@@ -42,12 +42,13 @@ export async function print (characteristic, file, options) {
     const { data, metadata } = await prepareData(image)
 
     // print
+    // @see https://github.com/davestewart/phomemo-cli/pull/6
     if (characteristic) {
       log(`Printing image "${file}" ...`)
       characteristic.write(data, true)
     }
 
-    // return
+    // resolve
     resolve(metadata)
   })
 }

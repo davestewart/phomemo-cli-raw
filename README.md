@@ -218,11 +218,12 @@ Operating as: server
   - Quit
 ```
 
-If the printer does not show in the list:
+If the printer does not show in the list, make sure:
 
-- make sure the printer is turned on
-- make sure you did not connect to the printer using the system dialog
-- don't run two scripts attempting to access the printer at the same time
+- the printer is turned on
+- the printer is not currently charging
+- you did not connect to the printer using the system dialog
+- you aren't running more than one script at the same time
 
 If you know the name of the printer you want to connect to, pass its name to skip the menu:
 
