@@ -1,13 +1,45 @@
 import noble from '@abandonware/noble'
 import { confirm, select } from '@inquirer/prompts'
 import { Spinner } from 'cli-spinner'
+import { log } from './utils.js'
 
 export const SCAN_AGAIN = 'SCAN_AGAIN'
 export const QUIT = 'QUIT'
 
 export let discoveredDevices = {};
 
-export async function getDeviceCharacteristicMenu () {
+export async function getDevice(name, attempts = 3, withMenu = true) {
+  let scanDurationInMs = 5000
+  let device
+  let attempt = 1
+  do {
+    await scanDevices(scanDurationInMs, `Searching for "${name}" (attempt ${attempt})`)
+    device = discoveredDevices[name]
+    if (device) {
+      log(`Found "${name}"`)
+      const characteristic = await getWritableCharacteristic(device)
+      if (characteristic) {
+        return characteristic
+      }
+      log(`Device "${name}" is not writeable`)
+      return getDeviceMenu()
+    }
+    else {
+      scanDurationInMs = 10000
+      attempt++
+      if (attempt > attempts) {
+        log(`Couldn't find device "${name}"\n\n- Is it powered on?\n- Is the device name correct?`)
+        if (withMenu) {
+          log(`Let's try finding it manually...`)
+          return getDeviceMenu()
+        }
+        return null
+      }
+    }
+  } while (!device)
+}
+
+export async function getDeviceMenu () {
   let scanDurationInMs = 5000
   do {
     await scanDevices(scanDurationInMs)
@@ -28,25 +60,23 @@ export async function getDeviceCharacteristicMenu () {
       // Looks like we can't write to this device.
       if (!characteristic) {
         const tryAgain = await promptTryAgain()
-        if (tryAgain) {
-          continue
-        }
-        else {
+        if (!tryAgain) {
           process.exit()
         }
       }
       else {
         // We can write to the device, so send the characteristic.
+        console.log()
         return characteristic
       }
     }
   } while (true)
 }
 
-async function scanDevices (scanDurationInMs = 5000) {
+async function scanDevices (scanDurationInMs = 5000, label = 'Scanning bluetooth devices') {
   discoveredDevices = {}
 
-  const spinner = new Spinner('Scanning bluetooth devices.. %s')
+  const spinner = new Spinner(`${label} ... %s`)
   spinner.setSpinnerString('|/-\\')
   spinner.start()
   noble.on('discover', async (peripheral) => {
@@ -99,8 +129,8 @@ async function getWritableCharacteristic (peripheral) {
 }
 
 async function promptTryAgain () {
-  console.log('dang it doesn\'t look like we can print to this device 😕')
-  return confirm({ message: 'want to try again?' })
+  console.log(`It doesn't look like we can print to this device`)
+  return confirm({ message: 'Try again?' })
 }
 
 function delay (ms) {

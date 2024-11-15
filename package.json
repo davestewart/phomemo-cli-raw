@@ -6,9 +6,12 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "serve": "node src -p 4000",
-    "serve:cache": "node src -p 4000 --cache",
-    "serve:debug": "node src -p 4000 --cache --debug --no-setup",
+    "serve": "node src --port 4000",
+    "serve:cache": "node src --port 4000 --cache",
+    "serve:client": "node src --port 4000 --cache --debug --no-device",
+    "serve:dev": "node src --port 4000 --cache --debug --device 'M02 Pro'",
+    "print": "node src",
+    "print:test": "node src --file '' --debug",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

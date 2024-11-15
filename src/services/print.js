@@ -1,5 +1,6 @@
 import Fs from 'fs'
 import { prepareImage } from './image.js'
+import { log } from './utils.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
 // constants
@@ -22,32 +23,33 @@ export const IMAGE_WIDTH = BYTES_PER_LINE * 8
  * @returns {Promise<sharp.Metadata>}
  */
 export async function print (characteristic, file, options) {
-  // check file exists
-  if (!Fs.existsSync(file)) {
-    throw new Error('File not found')
-  }
+  return new Promise(async (resolve, reject) => {
+    // check file exists
+    if (!file) {
+      return reject(`Missing file path`)
+    }
+    if (!Fs.existsSync(file)) {
+      return reject(`File "${file}" not found`)
+    }
 
-  // options
-  const { scale, dither, debug, cache } = options
+    // options
+    const { scale, dither, debug } = options
 
-  // process image
-  const image = await prepareImage(file, IMAGE_WIDTH, scale, dither, debug)
+    // process image
+    const image = await prepareImage(file, IMAGE_WIDTH, scale, dither, debug)
 
-  // prepare data
-  const { data, metadata } = await prepareData(image)
+    // prepare data
+    const { data, metadata } = await prepareData(image)
 
-  // print
-  if (characteristic) {
-    characteristic.write(data, true)
-  }
+    // print
+    if (characteristic) {
+      log(`Printing image "${file}" ...`)
+      characteristic.write(data, true)
+    }
 
-  // delete image unless caching
-  if (!cache) {
-    Fs.unlinkSync(file)
-  }
-
-  // return
-  return metadata
+    // return
+    resolve(metadata)
+  })
 }
 
 /**

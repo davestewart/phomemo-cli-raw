@@ -5,6 +5,7 @@ import multer from 'multer'
 import Sharp from 'sharp'
 import { mergeOptions } from './services/options.js'
 import { print } from './services/print.js'
+import { log } from './services/utils.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
 // setup
@@ -24,6 +25,9 @@ function sendError (res, message, status = 400) {
 // ---------------------------------------------------------------------------------------------------------------------
 
 export function serve (port = 4000, characteristic, options = {}) {
+  // debug
+  log('Starting server...')
+
   // express
   const app = express()
 
@@ -64,6 +68,11 @@ export function serve (port = 4000, characteristic, options = {}) {
     }
     catch (err) {
       sendError(res, err.message)
+    }
+    finally {
+      if (!options.cache) {
+        Fs.unlinkSync(path)
+      }
     }
   })
 
@@ -163,6 +172,6 @@ export function serve (port = 4000, characteristic, options = {}) {
 
   // start the server
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`)
+    log(`Server running at http://localhost:${port}`)
   })
 }

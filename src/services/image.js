@@ -1,6 +1,7 @@
 import Sharp from 'sharp'
 import floydSteinberg from 'floyd-steinberg'
 import { PNG } from 'pngjs'
+import { log } from './utils.js'
 
 /**
  * Prepare the image for printing
@@ -36,7 +37,7 @@ export async function prepareImage (file, width, scale = 100, dither = false, de
   // debug
   const metadata = await image.metadata()
   if (debug) {
-    console.log('debug:', { file, scale, dither, metadata })
+    log('Processed image:', { data: { file, scale, dither }, metadata })
   }
 
   // return

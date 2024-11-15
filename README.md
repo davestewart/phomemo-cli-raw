@@ -1,4 +1,4 @@
-## cli-phomemo-printer
+# Phomemo CLI
 
 > A Node JS package to enabling printing to a Phomemo printer
 
@@ -8,15 +8,13 @@ The [Phomemo M02 S/Pro](https://eu.phomemo.com/products/m02-pro-portable-printer
 
 ![Phomemo MO2 Pro](https://eu.phomemo.com/cdn/shop/files/Cyan-Phomemo-M02-PRO-Bluetooth-Mini-Printer-High-Quality-Printing-Multiple-Thermal-Stickers_1220x_crop_center.png?v=1729060454)
 
-This package enables you to print directly to the printer using Node JS, from both local files, or via the browser through a local Express server.
+This package enables you to print directly to the printer using Node JS, from both local files, or from the browser via a local Express server.
 
 ## Setup
 
 ### Bluetooth
 
-For the package to connect to the printer over Bluetooth, OSX needs to give permissions to the application running Node JS.
-
-This will most likely be your Terminal app or your IDE. 
+For the package to connect to the printer over Bluetooth, OSX needs to give permissions to the application running Node JS. This will most likely be your Terminal app or your IDE. 
 
 Navigate to **System Settings** > **Privacy & Security** > **Bluetooth**, and add any apps which will need to communicate with the printer.
 
@@ -32,78 +30,174 @@ cd phomemo-cli
 npm install
 ```
 
-### Running
+## Usage
 
-Once set up, you can run the CLI in `printer` or `server` mode.
+Start the script by running it from the terminal.
 
-Before starting, it will first attempt to connect to the printer (see the [Troubleshooting](#troubleshooting) section if you have issues).
+Depending on what parameters you pass, it will run in one of two modes:
 
-#### Printer Mode
+- [server](#server-mode) – where you print files by selecting them from a web browser
+- [printer](#printer-mode) – where you print files one at a time from the terminal
 
-Passing a file path via `-f` will run the CLI in "printer" mode:
+For example:
 
 ```bash
-node src -f path/to/file.jpg
+# print an image
+node src --file /path/to/file.png --dither
+
+# start the web server
+node src --port 4000 --cache
 ```
 
-If you the main file without any command-line arguments, you'll print out a sample burger sticker.
+Running in server mode is generally the most user-friendly experience, as you can drag and drop images from your desktop, re-print files, delete files, etc.
 
-#### Server Mode
+## Server Mode
 
-Passing a port  via `-p` will run the CLI in "server" mode:
+![server](res/assets/server.png)
+
+### Basic usage
+
+To start the web server, pass the `--port` parameter with a port:
 
 ```bash
-node src -p 4000
+# simple ui
+node src --port 4000
+
+# file management ui
+node src --port 4000 --cache
 ```
 
-The package's scripts are set up to run a server the same way:
+Alternatively, you can run one of the preconfigured NPM scripts:
 
 ```bash
+# simple
 npm run serve
+
+# file management
+npm run serve:cache
 ```
 
-You can then `POST` to `http://localhost:4000/print` to print images to the printer.
+You can then visit `http://localhost:4000` in your browser to get started printing images.
+
+### Developers
+
+The print server is an Express app with just enough endpoints available to get the job done.
+
+You can `POST` images from other applications to print directly to the printer.
 
 You may pass CLI arguments as query strings, for example:
 
 ```
-http://localhost:4000/print?scale=28&dither=1
+POST http://localhost:4000/print?scale=478&dither=1
 ```
 
-Note that any CLI arguments (i.e. `-d`) and query string values will be combined in the final print function, so the following would print a dithered image at 50%:
+Note that any CLI parameters and query string values will be combined in the final print function, so the following would print a dithered image at 50%:
 
 ```
 // bash
-node src -d
+node src --port 4000 --dither
 
-// http
+// HTTP POST
 http://localhost:4000/print?scale=50
 ```
 
-### CLI arguments
+## Printer Mode
 
-The full CLI arguments are:
+![server](res/assets/printer.png)
+
+### Basic usage
+
+To print a single file, pass the `--file` parameter with a file path:
+
+```bash
+node src --file path/to/file.jpg
+```
+
+You can pass additional commands like so:
+
+```bash
+node src --file path/to/file.jpg --dither --debug
+```
+
+## CLI Reference
+
+### Terminal commands
+
+To work with the script directly, use the terminal:
 
 ```
-Options:
-  -f, --file      image file path to print 
-  -p, --port      port to start print server (default: 4000)
-  -d, --dither    flag to dither the printed output (default: 0)
-  -s, --scale     percent to scale the printed output (1-100+) (default: 100)
-  -h, --help      display help for command
+# format
+node src <option value>
+
+#example
+node src --port 4000 --cache --debug 
+```
+
+The script takes the following parameters:
+
+```
+device
+  --device <device>  choose a named device (default: "")
+  --no-device        skip choosing a device
+
+server
+  --port <port>      port to start print server
+
+image
+  --file <path>      path for image to print (default: "")
+  --scale <size>     percent scale at which the image should print (1-100) (default: "100")
+  --dither           flag to dither the passed image (default: false)
+
+development
+  --cache            maintain cache folder of printed images (default: false)
+  --debug            maintain debug image folder and dump console logs (default: false)  
+```
+
+### NPM Scripts
+
+To run preconfigured scripts, use npm:
+
+```bash
+# format
+npm run <script>
+
+# example
+npm run serve:cache
+```
+
+The following scripts are available:
+
+```
+printer
+  print           print a file directly (npm run print -- --file <path to file>)
+  print:test      print a sample file
+
+server
+  serve           run the server 
+  serve:cache     run the server cache files
+  
+server (development)
+  serve:client    run the server with a cache, but without a printer
+  serve:dev       run the server with cache, debugging, and 'M02 Pro' printer
 ```
 
 ## Image and label sizes
 
 The printer's default label size is 53mm, with images expected to be 560px wide (or they will be resized to fit).
 
-If you want to print on [smaller labels](https://www.amazon.co.uk/s?k=phomemo+labels) you will need to tweak the printer's `scale` setting, via either command line arguments or query parameters:
+If you want to print on [smaller labels](https://www.amazon.co.uk/s?k=phomemo+labels) you will need to tweak the output image's scale, via either command line arguments or query parameters:
 
 | Label Size     | Image Width | CLI     | Server      |
 |----------------|-------------|---------|-------------|
 | 53mm (default) | 560px       | None    | None        |
 | 25mm           | 264px       | `-s 47` | `?scale=47` |
 | 15mm           | 158px       | `-s 28` | `?scale=28` |
+
+For example, to configure the server to the 25mm label:
+
+```bash
+node src --port 4000 --scale 47
+```
 
 ## Troubleshooting
 
@@ -130,6 +224,12 @@ If the printer does not show in the list:
 - make sure you did not connect to the printer using the system dialog
 - don't run two scripts attempting to access the printer at the same time
 
+If you know the name of the printer you want to connect to, pass its name to skip the menu:
+
+```bash
+node src --port 4000 --device 'M02 Pro'
+```
+
 ### Battery
 
 A flashing light on the printer then loss of power probably means that the printer needs charging.
@@ -139,6 +239,18 @@ Note that:
 - the printer will only charge from a basic mobile phone charger, or a USB cable attached to a laptop
 - attaching a more powerful charger (such as a laptop) will cause the printer not to charge
 - you can use the Phomemo app to monitor the charge level
+
+### Blank pages
+
+Currently, there are issues with printer output, specifically around dithering. If you don't get any output, try running the package again with the `--debug` flag, then check the `res/debug` folder.
+
+If the output image is empty, you may need to dither, or not dither.
+
+Try running the print code, or server, again, using the `--dither` flag:
+
+```bash
+node src --file /path/to/file.png --dither
+```
 
 ### Other printers
 
@@ -153,4 +265,4 @@ The [original repo](https://github.com/vrk/cli-phomemo-printer) and printing fun
 - [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools): lifesaver for having the protocol documented & providing the general algorithm
 - [Phomemo Thermal Printing On MacOS](https://brainbaking.com/post/2023/02/phomemo-thermal-printing-on-macos/): gave me faith that this was even possible!
 
-The additional server functionality, Sharp migration, code refactor and improved docs were added by [Dave Stewart](https://github.com/davestewart).
+The additional server functionality, browser client, Sharp migration, code refactor and improved docs were added by [Dave Stewart](https://github.com/davestewart).
