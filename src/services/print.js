@@ -1,3 +1,4 @@
+import Fs from 'fs'
 import { prepareImage } from './image.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -17,26 +18,43 @@ export const IMAGE_WIDTH = BYTES_PER_LINE * 8
  *
  * @param   {object}    characteristic
  * @param   {string}    file
- * @param   {number}    scale
- * @param   {boolean}   dither
- * @returns {Promise<void>}
+ * @param   {Options}   options
+ * @returns {Promise<sharp.Metadata>}
  */
-export async function print (characteristic, file, scale = 100, dither = false) {
+export async function print (characteristic, file, options) {
+  // check file exists
+  if (!Fs.existsSync(file)) {
+    throw new Error('File not found')
+  }
+
+  // options
+  const { scale, dither, debug, cache } = options
+
   // process image
-  const image = await prepareImage(file, IMAGE_WIDTH, scale, dither, true)
+  const image = await prepareImage(file, IMAGE_WIDTH, scale, dither, debug)
 
   // prepare data
-  const data = await prepareData(image)
+  const { data, metadata } = await prepareData(image)
 
   // print
-  characteristic.write(Buffer.from(data), true)
+  if (characteristic) {
+    characteristic.write(data, true)
+  }
+
+  // delete image unless caching
+  if (!cache) {
+    Fs.unlinkSync(file)
+  }
+
+  // return
+  return metadata
 }
 
 /**
  * Convert Sharp image to printer data
  *
  * @param   {sharp.Sharp}   image     The sharp image
- * @returns {Promise<number[]>}
+ * @returns {Promise<{data:Buffer<ArrayBuffer>, metadata: sharp.Metadata}>}
  */
 async function prepareData (image) {
   // helper function to get pixel RGBA values at specific coordinates
@@ -51,7 +69,8 @@ async function prepareData (image) {
   }
 
   // image data
-  const { width, height } = await image.metadata()
+  const metadata = await image.metadata()
+  const { width, height } = metadata
   const raw = await image
     .ensureAlpha()
     .raw()
@@ -174,22 +193,8 @@ async function prepareData (image) {
   data[index++] = 9
 
   // return
-  return data
-}
-
-// ---------------------------------------------------------------------------------------------------------------------
-// utils
-// ---------------------------------------------------------------------------------------------------------------------
-
-/**
- * Helper function to Parse CLI or HttpRequest settings
- *
- * @param {object}  options
- * @returns {{scale: number | undefined, dither: boolean | undefined}}
- */
-export function parseSettings ({ scale, dither } = {}) {
   return {
-    scale: Number(scale) || undefined,
-    dither: dither === '1' || dither === 'true' || dither === true
+    data: Buffer.from(data),
+    metadata,
   }
 }

@@ -7,6 +7,8 @@
   "main": "src/index.js",
   "scripts": {
     "serve": "node src -p 4000",
+    "serve:cache": "node src -p 4000 --cache",
+    "serve:debug": "node src -p 4000 --cache --debug --no-setup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

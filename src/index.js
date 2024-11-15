@@ -1,8 +1,9 @@
 import Fs from "fs"
 import { Command } from 'commander'
-import { getDeviceCharacteristicMenu } from './device.js'
+import { parseOptions } from './services/options.js'
+import { getDeviceCharacteristicMenu } from './services/device.js'
+import { print } from './services/print.js'
 import { serve } from './server.js'
-import { parseSettings, print } from './print.js'
 
 // ---------------------------------------------------------------------------------------------------------------------
 // setup
@@ -15,18 +16,24 @@ program
   .option('-f, --file <path>', 'path for image to print')
   .option('-s, --scale <size>', 'percent scale at which the image should print (1-100)', '100')
   .option('-d, --dither', 'flag to dither the passed image', false)
+  .option('-c, --cache', 'maintain the cache of printed images', false)
+  .option('--debug', 'maintain debug images and dump console logs', false)
+  .option('--no-setup', 'skip printer setup')
 
 // options
-const options = program.parse(process.argv).opts()
-const settings = parseSettings(options)
-const { port, file } = options
+const args = program.parse(process.argv).opts()
+const options = parseOptions(args)
+const { port, file, setup } = args
 
 // debug
 console.log(`Mode: ${port ? 'Server' : 'Printer'}`)
-console.log('Settings:', settings)
+console.log('Options:', options)
+console.log('Args:', args)
 
 // get device
-export const characteristic = await getDeviceCharacteristicMenu()
+export const characteristic = setup
+  ? await getDeviceCharacteristicMenu()
+  : null
 
 // ---------------------------------------------------------------------------------------------------------------------
 // main
@@ -34,7 +41,7 @@ export const characteristic = await getDeviceCharacteristicMenu()
 
 // if we've a port, start a server
 if (port) {
-  serve(port, characteristic, settings)
+  serve(port, characteristic, options)
 }
 
 // otherwise, print supplied or test image
@@ -49,6 +56,5 @@ else {
   }
 
   // print
-  const { scale, dither } = settings
-  void print(characteristic, target, scale, dither)
+  void print(characteristic, target, options)
 }
